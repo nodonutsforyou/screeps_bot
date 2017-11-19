@@ -51,7 +51,7 @@ var roomGeo = {
             }
             sum+=r.memory.roadPaths[j]['l'];
         }
-        return roomGeo.getLocation(r); //todo other locations
+        return -1;
 	},
 	
 	emptySpaceNearBy: function(room, rp) {

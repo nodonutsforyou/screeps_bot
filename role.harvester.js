@@ -20,6 +20,9 @@ var roleHarvester = {
             case 'task':
                 roleHarvester.doTask(creep);
                 break;
+            case 'renewCreep':
+                roleHarvester.renew(creep);
+                break;
             default:
                 creep.memory.status = 'harvester';
                 break;
@@ -42,8 +45,10 @@ var roleHarvester = {
         for(var i=0; i<creep.room.memory.tasks.length; i++) {
             var t = creep.room.memory.tasks[i]
             if (t.taskCreep === undefined && t.priority>c) {
-                c = t.priority;
-                task = i;
+                if (t.taskName != 'renewCreep' || roleHarvester.readyForRenew(creep)) {
+                    c = t.priority;
+                    task = i;
+                }
             }
         }
         if (c>=0) {
@@ -52,6 +57,19 @@ var roleHarvester = {
             return 0; 
         }
         return -1;
+    },
+    
+    readyForRenew: function(creep) {
+        if (creep.ticksToLive > 500) return false; //todo more accurate formula
+        var bp = creep.getActiveBodyparts(MOVE) + creep.getActiveBodyparts(WORK) + creep.getActiveBodyparts(CARRY);
+        // console.log('bp: ', creep.name, bp, '/', creep.room.memory.workerBodayparts.length);
+        if (bp < creep.room.memory.workerBodayparts.length) return false; 
+        // var enNeeded = Math.ceil(creep.room.energyCapacityAvailable/2.5/bp) //TODO return formulas
+        console.log('bp: ', creep.name, creep.room.energyAvailable, '/', creep.room.energyAvailable);
+        if (creep.room.energyAvailable*2 < creep.room.energyCapacityAvailable) return false;
+        var s = creep.room.find(FIND_MY_SPAWNS)[0];
+        if(s.spawning) return false;
+        return true;
     },
     
     doTask: function(creep) {
@@ -69,6 +87,9 @@ var roleHarvester = {
                     break;
                 case 'buildExtensions':
                     roleHarvester.taskBuildExtensions(creep);
+                    break;
+                case 'renewCreep':
+                    roleHarvester.renew(creep);
                     break;
                 default:
                     creep.say('task '+st);
@@ -90,6 +111,12 @@ var roleHarvester = {
     
     revaluate: function(creep) {
         roleHarvester.cancelMyTask(creep);
+        //0 - keep alive
+        if(roleHarvester.readyForRenew(creep)) {
+            creep.memory.status = 'renewCreep'
+            creep.say('renew');
+            return;
+        }
         //1 - harvest
         if(creep.carry.energy < creep.carryCapacity) {
             creep.memory.status = 'harvester'
@@ -114,6 +141,26 @@ var roleHarvester = {
         creep.memory.status = 'update'
         creep.say('update');
         return;
+    },
+    
+    renew: function(creep) {
+        var s = creep.room.find(FIND_MY_SPAWNS)[0];
+        var res = s.renewCreep(creep);
+        console.log('renewCreep',res);
+        creep.say('renew '+res);
+        switch(res) {
+            case (ERR_NOT_IN_RANGE):
+                creep.moveTo(s, {visualizePathStyle: {stroke: '#ffffff'}});
+                break
+            case (ERR_BUSY):
+            case (ERR_FULL):
+            case (ERR_NOT_ENOUGH_ENERGY):
+                roleHarvester.revaluate(creep);
+                break
+            default:
+                // creep.say('renew '+res);
+                break;
+        }
     },
     
     store: function(creep) {

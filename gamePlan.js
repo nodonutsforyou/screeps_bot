@@ -4,10 +4,11 @@ var util = require('util');
 var gamePlan = {
     
     tasks: function(r) {
-        var version = 8;
+        var version = 10;
         if (r.memory.version != version) {
             r.memory.version = version;
             r.memory.tasks = new Array();
+            var s = r.find(FIND_MY_SPAWNS)[0];
             var sources = r.find(FIND_SOURCES);
             console.log(sources);
             var frSp = 0;
@@ -16,12 +17,13 @@ var gamePlan = {
             }
             r.memory.freeSpaceAroundEnergy = frSp;
             
-            var newTask = {taskName:'update', taskTarget:r.controller, taskCreep:undefined, priority:1000};
+            var newTask = {taskName:'update', taskTarget:r.controller, taskCreep:undefined, priority:100};
             console.log("new task: ", newTask);
             r.memory.tasks.push(newTask);
             r.memory.tasks.push(newTask);
-            // newTask = {taskName:'buildExtensions', taskTarget:r.controller, taskCreep:undefined, priority:10};
-            // console.log("new task: ", newTask.taskName);
+            r.memory.tasks.push(newTask);
+            newTask = {taskName:'renewCreep', taskTarget:s, taskCreep:undefined, priority:1000};
+            console.log("new task: ", newTask.taskName);
             r.memory.tasks.push(newTask);
         } else {
             console.log(Game.time);
@@ -40,12 +42,14 @@ var gamePlan = {
                 default:
                     var p = roomGeo.getLocation(r);
             }
-            console.log('try' + p[0] + ':' + p[1]);
+            if (p == -1) return -1;
+            // console.log('try' + p[0] + ':' + p[1]);
             var res = r.createConstructionSite( p[0], p[1], struc );
-            console.log('res' + res);
+            // console.log('res' + res);
             cr = res == 0; //TODO more results
         }
         console.log('placed!');
+        return 0;
     },
     
     roadsPaths: function(sp, r) {
@@ -59,11 +63,11 @@ var gamePlan = {
             var obj = {i:0, l:pathSpSource.length, path:pathSpSource};
             r.memory.roadPaths.push(obj);
         }
-        for(var j=0; j<sources.length; j++) {
-            var pathSpSource = r.findPath(r.controller.pos, sources[j].pos, {ignoreCreeps:false});
-            var obj = {i:0, l:pathSpSource.length, path:pathSpSource};
-            r.memory.roadPaths.push(obj);
-        }
+        // for(var j=0; j<sources.length; j++) {
+        //     var pathSpSource = r.findPath(r.controller.pos, sources[j].pos, {ignoreCreeps:false});
+        //     var obj = {i:0, l:pathSpSource.length, path:pathSpSource};
+        //     r.memory.roadPaths.push(obj);
+        // }
     },
     
     constructionPlan: function(r){
@@ -86,9 +90,12 @@ var gamePlan = {
                     if (towerExCount<towerCount) {
                         gamePlan.placeConstruction(r, STRUCTURE_TOWER);
                     } else {
-                        console.log('road');
+                        // console.log('road');
                         gamePlan.roadsPaths(s, r);
-                        gamePlan.placeConstruction(r, STRUCTURE_ROAD);
+                        var st = gamePlan.placeConstruction(r, STRUCTURE_ROAD);
+                        if (st <0 ) {
+                            console.log('roads done');
+                        }
                     }
                 }
 	        } else {
