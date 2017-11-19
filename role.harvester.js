@@ -17,6 +17,9 @@ var roleHarvester = {
             case 'harvester':
                 roleHarvester.harvester(creep);
                 break;
+            case 'pickDropedEnergy':
+                roleHarvester.pickDropedEnergy(creep);
+                break;
             case 'task':
                 roleHarvester.doTask(creep);
                 break;
@@ -123,6 +126,14 @@ var roleHarvester = {
             creep.say('renew');
             return;
         }
+        //0.5 - pick up energy
+        var droped = creep.room.find(FIND_DROPPED_RESOURCES);
+        if(droped.length) {
+            console.log("droped:",droped[0].pos);
+            creep.memory.status = 'pickDropedEnergy'
+            creep.say('pickUp');
+            return;
+        }
         //1 - harvest
         if(creep.carry.energy < creep.carryCapacity) {
             creep.memory.status = 'harvester'
@@ -216,6 +227,44 @@ var roleHarvester = {
             } else {
                 roleHarvester.updater(creep);
             }
+        } else {
+            roleHarvester.revaluate(creep);
+        }
+    },
+    
+    
+    pickDropedEnergy: function(creep) {
+        creep.say('pickUp')
+	    if(creep.carry.energy < creep.carryCapacity) {
+	        var targetDrop = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES );
+            if (targetDrop) {
+                console.log("dropedP:",targetDrop.pos);
+                var res = creep.pickup(targetDrop);
+                switch(res) {
+                    case(OK):
+                        break;
+                    case(ERR_NOT_IN_RANGE):
+                        creep.moveTo(targetDrop, {visualizePathStyle: {stroke: '#ffffff'}});
+                        break;
+                    case(ERR_FULL):
+                        if (creep.room.energyAvailable < creep.room.energyCapacityAvailable) {
+                            creep.memory.status = 'store';
+                            creep.say('store');
+                            roleHarvester.store(creep);
+                            break;
+                        }
+                    default:
+                        roleHarvester.revaluate(creep);
+                        break;
+                }
+            } else {
+                roleHarvester.revaluate(creep);
+            }
+        }
+        else if (creep.room.energyAvailable < creep.room.energyCapacityAvailable) {
+            creep.memory.status = 'store';
+            creep.say('store');
+            roleHarvester.store(creep);
         } else {
             roleHarvester.revaluate(creep);
         }

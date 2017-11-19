@@ -121,7 +121,7 @@ var gamePlan = {
         r.memory.emax = emax;
         r.memory.workerBodayparts = gamePlan.getWorkerCreepBodyparts(emax);
         r.memory.setlerBodayparts = gamePlan.getSetlerCreepBodyparts(emax); //todo count only if enough energy
-        var sources = r.find(FIND_SOURCES);//todo cut empty ones
+        var sources = r.find(FIND_SOURCES);//todo cut empty ones - already done?
         sources.sort(function(a,b) {
             var va = a.pos.x + a.pos.y;
             var vb = b.pos.x + b.pos.y;
@@ -178,6 +178,24 @@ var gamePlan = {
         if(e >= 50) {
             init.push(MOVE);
             e-=50;
+        }
+        init.sort();
+        return init;
+    },
+
+    getCloseCombatCreepBodyparts: function(energy) {
+        var init = [ATTACK,MOVE];
+        var s = BODYPART_COST[ATTACK] + BODYPART_COST[MOVE]
+        var e = energy - s;
+        for(; e >= s; e-= s) {
+            init.push(ATTACK,MOVE);
+        }
+        if(e >= BODYPART_COST[MOVE]) {
+            init.push(MOVE);
+            e-=BODYPART_COST[MOVE];
+        }
+        for(; e >= BODYPART_COST[TOUGH]; e-= BODYPART_COST[TOUGH]) {
+            init.push(TOUGH);
         }
         init.sort();
         return init;

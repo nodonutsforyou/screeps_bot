@@ -58,14 +58,17 @@ var roomGeo = {
 	
 	gerNearRoomNames: function(r) {
 	    var n = r.name;
-	    var regexp = /^W(\d+)N(\d+)$/;
+	    console.log(n);
+	    var regexp = /^([WE])(\d+)([NS])(\d+)$/;
 	    var m = regexp.exec(n);
-	    var x = parseInt(m[1]);
-	    var y = parseInt(m[2]);
-	    return ['W'+x+'N'+(y+1),
-	        'W'+(x-1)+'N'+y,
-	        'W'+x+'N'+(y-1),
-	        'W'+(x+1)+'N'+y,
+	    var WE = m[1]
+	    var NS = m[3]
+	    var x = parseInt(m[2]);
+	    var y = parseInt(m[4]);
+	    return [WE+x+NS+(y+1),
+	        WE+(x-1)+NS+y,
+	        WE+x+NS+(y-1),
+	        WE+(x+1)+NS+y,
 	        ];
 	},
     
@@ -92,7 +95,7 @@ var roomGeo = {
                 var goodPos = false;
                 for (var i = 5; !goodPos && i < pathSpCont.length; i ++) { //TODO 5 is a magic number
                     var p = [ pathSpCont[pathSpCont.length-i]['x'], pathSpCont[pathSpCont.length-i]['y'] ]
-                    if ( p[0] < 48 && p[0] > 1  &&  p[1] < 48  &&  p[1] > 1 ) goodPos = true;
+                    if ( p[0] < 48 && p[0] > 1  &&  p[1] < 48  &&  p[1] > 1 ) goodPos = true; //TODO actual reason is not a close rang - it is close arrow
                 }
                 if (i<pathSpCont.length) {
                     console.log('Ramp xy', p);
