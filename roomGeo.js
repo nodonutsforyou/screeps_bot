@@ -89,9 +89,15 @@ var roomGeo = {
                 pathSpCont[pathSpCont.length-1]['y'] == 0 ||
                 pathSpCont[pathSpCont.length-1]['y'] == 49) {
                 util.drawPath(r, pathSpCont);
-                 var p = [ pathSpCont[pathSpCont.length-5]['x'], pathSpCont[pathSpCont.length-5]['y'] ]
-                console.log('Ramp xy', p);
-                return p;
+                var goodPos = false;
+                for (var i = 5; !goodPos && i < pathSpCont.length; i ++) { //TODO 5 is a magic number
+                    var p = [ pathSpCont[pathSpCont.length-i]['x'], pathSpCont[pathSpCont.length-i]['y'] ]
+                    if ( p[0] < 48 && p[0] > 1  &&  p[1] < 48  &&  p[1] > 1 ) goodPos = true;
+                }
+                if (i<pathSpCont.length) {
+                    console.log('Ramp xy', p);
+                    return p;
+                }
             }
         }
         return -1;
