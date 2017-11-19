@@ -23,6 +23,9 @@ var roleHarvester = {
             case 'renewCreep':
                 roleHarvester.renew(creep);
                 break;
+            case 'repairWhatJustBuilded':
+                roleHarvester.repairWhatJustBuilded(creep);
+                break;
             default:
                 creep.memory.status = 'harvester';
                 break;
@@ -91,6 +94,9 @@ var roleHarvester = {
                 case 'renewCreep':
                     roleHarvester.renew(creep);
                     break;
+                case 'repairRamparts':
+                    roleHarvester.repairRamparts(creep);
+                    break;
                 default:
                     creep.say('task '+st);
                     break;
@@ -143,12 +149,37 @@ var roleHarvester = {
         return;
     },
     
+    repairRamparts: function(creep) {
+        var closestDamagedRampart = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: (structure) => structure.hits < structure.hitsMax && structure.structureType == STRUCTURE_RAMPART
+        });
+        if(closestDamagedRampart) {
+            var res = creep.repair(closestDamagedRampart);
+            switch(res) {
+                case (OK):
+                    break;
+                case (ERR_NOT_IN_RANGE):
+                    creep.moveTo(closestDamagedRampart, {visualizePathStyle: {stroke: '#ffffff'}});
+                    break;
+                default:
+                    console.log('stop Ramparts', res);
+                    roleHarvester.revaluate(creep);
+                    break;
+            }
+        } else {
+            consloe.log('no Ramparts');
+            roleHarvester.revaluate(creep);
+        }
+    },
+    
     renew: function(creep) {
         var s = creep.room.find(FIND_MY_SPAWNS)[0];
         var res = s.renewCreep(creep);
-        console.log('renewCreep',res);
-        creep.say('renew '+res);
+        // console.log('renewCreep',res);
+        // creep.say('renew '+res);
         switch(res) {
+            case (OK):
+                break;
             case (ERR_NOT_IN_RANGE):
                 creep.moveTo(s, {visualizePathStyle: {stroke: '#ffffff'}});
                 break
@@ -158,7 +189,7 @@ var roleHarvester = {
                 roleHarvester.revaluate(creep);
                 break
             default:
-                // creep.say('renew '+res);
+                creep.say('renew '+res);
                 break;
         }
     },
@@ -173,7 +204,8 @@ var roleHarvester = {
                     filter: (structure) => {
                         return (structure.structureType == STRUCTURE_EXTENSION ||
                                 structure.structureType == STRUCTURE_SPAWN ||
-                                structure.structureType == STRUCTURE_TOWER) && structure.energy < structure.energyCapacity;
+                                structure.structureType == STRUCTURE_TOWER
+                                ) && structure.energy < structure.energyCapacity;
                     }
             });
             if(targets.length > 0) {
@@ -253,9 +285,39 @@ var roleHarvester = {
 	    if(creep.carry.energy == 0 || targets.length == 0) {
             roleHarvester.revaluate(creep);
 	    } else if(targets.length) {
-                if(creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
+            var res = creep.build(targets[0]);
+            switch(res) {
+                case(OK):
+                    creep.say('built!');
+                    creep.memory.status = 'repairWhatJustBuilded';
+                    creep.memory.justBuild = targets[0].id;
+                    break;
+	            case(ERR_NOT_IN_RANGE):
                     creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
-            }
+                    break;
+                default:
+                    roleHarvester.revaluate(creep);
+                    break;
+	        }
+        }
+	},
+    
+    repairWhatJustBuilded: function(creep) {
+        var target = Game.getObjectById(creep.memory.justBuild);
+	    if(creep.carry.energy == 0) {
+            roleHarvester.revaluate(creep);
+	    } else {
+            var res = creep.repair(target);
+            switch(res) {
+                case(OK):
+                    break;
+	            case(ERR_NOT_IN_RANGE):
+                    creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
+                    break;
+                default:
+                    roleHarvester.revaluate(creep);
+                    break;
+	        }
         }
 	},
 

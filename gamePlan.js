@@ -4,7 +4,7 @@ var util = require('util');
 var gamePlan = {
     
     tasks: function(r) {
-        var version = 10;
+        var version = 11;
         if (r.memory.version != version) {
             r.memory.version = version;
             r.memory.tasks = new Array();
@@ -20,9 +20,7 @@ var gamePlan = {
             var newTask = {taskName:'update', taskTarget:r.controller, taskCreep:undefined, priority:100};
             console.log("new task: ", newTask);
             r.memory.tasks.push(newTask);
-            r.memory.tasks.push(newTask);
-            r.memory.tasks.push(newTask);
-            newTask = {taskName:'renewCreep', taskTarget:s, taskCreep:undefined, priority:1000};
+            newTask = {taskName:'repairRamparts', taskTarget:s, taskCreep:undefined, priority:10};
             console.log("new task: ", newTask.taskName);
             r.memory.tasks.push(newTask);
         } else {
@@ -38,6 +36,10 @@ var gamePlan = {
             switch(struc) {
                 case(STRUCTURE_ROAD):
                     var p = roomGeo.getLocationRoad(r, i);
+                    break;
+                case(STRUCTURE_RAMPART):
+                    var p = roomGeo.geLocationRampparts(r);
+                    i+=998;
                     break;
                 default:
                     var p = roomGeo.getLocation(r);
@@ -70,6 +72,7 @@ var gamePlan = {
         // }
     },
     
+    
     constructionPlan: function(r){
         r.memory.locationI = 1;
         var s = r.find(FIND_MY_SPAWNS)[0];
@@ -95,6 +98,10 @@ var gamePlan = {
                         var st = gamePlan.placeConstruction(r, STRUCTURE_ROAD);
                         if (st <0 ) {
                             console.log('roads done');
+                            var st = gamePlan.placeConstruction(r, STRUCTURE_RAMPART);
+                            if (st <0 ) {
+                                console.log('ramparts done');
+                            }
                         }
                     }
                 }
@@ -178,15 +185,25 @@ var gamePlan = {
 
     act: function(r) {
         var st = r.find(FIND_MY_SPAWNS);
-        var s = st[0]
+        var s = st[0];
         if (s  != undefined) {
-        
+            // var p = roomGeo.geLocationRampparts(r);
+            // console.log('construction undeway', p);
+            
             var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
             var setlers = _.filter(Game.creeps, (creep) => creep.memory.role == 'setler'); //todo count only if enough energy
     
             if(harvesters.length < r.memory.freeSpaceAroundEnergy+2) {
                 var newName = 'Harvester' + Game.time;
                 var newSpawn = s.spawnCreep(r.memory.workerBodayparts, newName, 
+                {memory: {role: 'harvester'}});
+                if (newSpawn == 0) {
+                    console.log('Spawning new harvester: ' + newName);   
+                }
+            }
+            if(harvesters.length < 2) {
+                var newName = 'Harvester' + Game.time;
+                var newSpawn = s.spawnCreep(gamePlan.getWorkerCreepBodyparts(r.energyAvailable), newName, 
                 {memory: {role: 'harvester'}});
                 if (newSpawn == 0) {
                     console.log('Spawning new harvester: ' + newName);   

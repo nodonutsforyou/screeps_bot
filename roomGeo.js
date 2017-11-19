@@ -1,3 +1,5 @@
+var util = require('util');
+
 var roomGeo = {
 
     getLocation: function(r) {
@@ -53,6 +55,47 @@ var roomGeo = {
         }
         return -1;
 	},
+	
+	gerNearRoomNames: function(r) {
+	    var n = r.name;
+	    var regexp = /^W(\d+)N(\d+)$/;
+	    var m = regexp.exec(n);
+	    var x = parseInt(m[1]);
+	    var y = parseInt(m[2]);
+	    return ['W'+x+'N'+(y+1),
+	        'W'+(x-1)+'N'+y,
+	        'W'+x+'N'+(y-1),
+	        'W'+(x+1)+'N'+y,
+	        ];
+	},
+    
+    geLocationRampparts: function(r) {
+        var localRooms = roomGeo.gerNearRoomNames(r);
+        for (var k=0; k<localRooms.length; k++) {
+            var otherRoomPos = new RoomPosition(25,25, localRooms[k]);
+            console.log(otherRoomPos);
+            var targets = r.find(FIND_STRUCTURES, {filter: (structure) => {return (structure.structureType == STRUCTURE_RAMPART);} });
+            var pathSpCont = r.findPath(r.controller.pos, otherRoomPos, {ignoreCreeps:true,
+                costCallback: function(roomName, costMatrix) {
+                    if(roomName == r.name) {
+                        for(var i = 0; i<targets.length; i++) {
+                            costMatrix.set(targets[i].pos.x, targets[i].pos.y, 255);
+                        }
+                    }
+                }
+            });
+            if (pathSpCont[pathSpCont.length-1]['x'] == 0 ||
+                pathSpCont[pathSpCont.length-1]['x'] == 49 ||
+                pathSpCont[pathSpCont.length-1]['y'] == 0 ||
+                pathSpCont[pathSpCont.length-1]['y'] == 49) {
+                util.drawPath(r, pathSpCont);
+                 var p = [ pathSpCont[pathSpCont.length-5]['x'], pathSpCont[pathSpCont.length-5]['y'] ]
+                console.log('Ramp xy', p);
+                return p;
+            }
+        }
+        return -1;
+    },
 	
 	emptySpaceNearBy: function(room, rp) {
 	    var free = 0;

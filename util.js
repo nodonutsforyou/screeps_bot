@@ -7,6 +7,12 @@ var util = {
                     }
             });
         return targets.length;
+	},
+	
+	drawPath: function(room, path) {
+	    for(var i = 1; i<path.length; i++) {
+	        room.visual.line(path[i-1]['x'], path[i-1]['y'], path[i]['x'], path[i]['y'])
+	    }
 	}
 };
 
