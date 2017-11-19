@@ -3,6 +3,10 @@ var roomGeo = require('roomGeo');
 var roleHarvester = {
 
     deside: function(creep) {
+        if(!creep.room.controller.my) {
+            var res = creep.moveTo(Game.spawns['Spawn1']) //todo fix evacuation
+            return;
+        }
         var status = creep.memory.status
         switch (status) {
             case 'builder':

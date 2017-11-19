@@ -211,7 +211,7 @@ var gamePlan = {
             var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
             var setlers = _.filter(Game.creeps, (creep) => creep.memory.role == 'setler'); //todo count only if enough energy
     
-            if(harvesters.length < r.memory.freeSpaceAroundEnergy+2) {
+            if(harvesters.length < r.memory.freeSpaceAroundEnergy) {
                 var newName = 'Harvester' + Game.time;
                 var newSpawn = s.spawnCreep(r.memory.workerBodayparts, newName, 
                 {memory: {role: 'harvester'}});
