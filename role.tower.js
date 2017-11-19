@@ -14,7 +14,8 @@ var roleTower = {
                 tower.heal(damagedCreep);
             } else if (tower.energy > tower.energyCapacity/2) {
                 var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-                    filter: (structure) => structure.hits < structure.hitsMax && (structure.structureType != STRUCTURE_RAMPART || structure.hits<1000)
+                    filter: (structure) => structure.hits < structure.hitsMax 
+                    && ( !(structure.structureType == STRUCTURE_RAMPART || structure.structureType == STRUCTURE_WALL) || structure.hits<1000)
                 });
                 if(closestDamagedStructure) {
                     tower.repair(closestDamagedStructure);
